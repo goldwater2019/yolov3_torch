@@ -2,7 +2,8 @@
 # project
 import os
 
-PROJECT_ROOT = os.path.join(__file__, "../")
+DIR = os.path.dirname(__file__)
+PROJECT_ROOT = os.path.join(DIR, "../")
 
 DATA_PATH = os.path.join(PROJECT_ROOT, "data/VOC")
 PROJECT_PATH = PROJECT_ROOT
