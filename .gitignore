@@ -1,2 +1,5 @@
 __pycache__
 .idea
+
+weight/best_84.pt
+weight/darknet53_448.weights
