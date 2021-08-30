@@ -3,3 +3,7 @@ __pycache__
 
 weight/best_84.pt
 weight/darknet53_448.weights
+
+data/results
+data/test
+data/VOC
