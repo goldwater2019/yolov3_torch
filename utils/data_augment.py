@@ -3,6 +3,7 @@ import random
 
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 
 
 class RandomHorizontalFilp(object):
@@ -188,6 +189,19 @@ class Mixup(object):
                 [bboxes_org, np.full((len(bboxes_org), 1), lam)], axis=1)
             # bboxes_org: [n_boxes_org, 5]
             # 5: 4+1
+            """
+            # visualize the mixup for debug purpose
+            plt.subplot(1, 3, 1)
+            plt.imshow(np.transpose(img_org, (1, 2, 0)))
+            plt.box("off")
+            plt.subplot(1, 3, 2)
+            plt.imshow(np.transpose(img_mix, (1, 2, 0)))
+            plt.box("off")
+            plt.subplot(1, 3, 3)
+            plt.imshow(np.transpose(img, (1, 2, 0)))
+            plt.box("off")
+            plt.show()
+            """
             bboxes_mix = np.concatenate(
                 [bboxes_mix, np.full((len(bboxes_mix), 1), 1 - lam)], axis=1)
             # bboxes_org: [n_boxes_mix, 5]

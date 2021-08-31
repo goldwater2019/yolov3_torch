@@ -206,37 +206,48 @@ class VocDataset(Dataset):
 
             bbox_xywh_scaled = 1.0 * bbox_xywh[np.newaxis, :] / strides[:, np.newaxis]
             # 不同尺度下的 bbox_xywh
+            # [n_scales, 4]
             # 每个 scale 下面, center of (x,y) -> (x/scale, y/scale)
             #                measure (w,h) -> (w/scale, h/scale)
             # bbox_xywh_scaled: shape of (n_scales, 4)
 
             iou = []
             exist_positive = False
-            for i in range(3):
+            for i in range(n_scales):
                 anchors_xywh = np.zeros((anchors_per_scale, 4))
+                # 生成的 anchor 的 xywh
                 anchors_xywh[:, 0:2] = np.floor(bbox_xywh_scaled[i, 0:2]).astype(np.int32) + 0.5  # 0.5 for compensation
                 # 每一个 scale 下面 box 的 x_center,y_center
+                # 对于给定的 scale 下面生成的锚框anchors
+                # 从标准的 3 个当前 scale 下面的bboxes 中生成数据
+                # 将生成的 anchor 的中心定位 bbox 的中心偏移(0.5,0.5)来作为补偿
                 # TODO 为什么要加0.5的补偿
                 #   中心偏移(0.5,0.5)之后, 给定当前感受野下的宽和高, 比较 gt 的 bbox 和当前 bbox 的 iou
                 #   如果 iou 大于一个给定的 threshold, 则说明给定感受野下的 anchor 可以认为是正样本
                 anchors_xywh[:, 2:4] = anchors[i]
+                # 设定生成的 anchor 的宽和高
 
                 iou_scale = tools.iou_xywh_numpy(bbox_xywh_scaled[i][np.newaxis, :], anchors_xywh)
+                # 计算当前 scale 下面的 3 个 bbox 和生成的 3 个 anchor 之间的 IOU
                 # iou_scale: [3,1]
                 iou.append(iou_scale)
                 iou_mask = iou_scale > 0.3  # [3,1]
 
                 if np.any(iou_mask):
-                    # 有任何一个 box 的 iou > 0.3就能人为这个 box 框到了目标
+                    # 有任何一个 box 的 iou > 0.3
+                    # 认为这个尺度下有 box 框到了目标
                     xind, yind = np.floor(bbox_xywh_scaled[i, 0:2]).astype(np.int32)
                     # 说明当前 scale 下面某个视野存在目标
                     # 将目标的索引取出来
 
                     # Bug : 当多个bbox对应同一个anchor时，默认将该anchor分配给最后一个bbox
+                    # 配置相应的 label
                     label[i][yind, xind, iou_mask, 0:4] = bbox_xywh
                     # iou>0.3的标签的 bbox 为 xywh(without scale)
                     label[i][yind, xind, iou_mask, 4:5] = 1.0
+                    # TODO 搞明白此处的 1.0 意味着什么
                     label[i][yind, xind, iou_mask, 5:6] = bbox_mix
+                    # 配置相应的 confidence
                     label[i][yind, xind, iou_mask, 6:] = one_hot_smooth
 
                     bbox_ind = int(bbox_count[i] % 150)  # BUG : 150为一个先验值,内存消耗大
@@ -246,6 +257,7 @@ class VocDataset(Dataset):
                     exist_positive = True
 
             if not exist_positive:
+                # 不存在正例样本
                 best_anchor_ind = np.argmax(np.array(iou).reshape(-1), axis=-1)
                 best_detect = int(best_anchor_ind / anchors_per_scale)
                 best_anchor = int(best_anchor_ind % anchors_per_scale)
