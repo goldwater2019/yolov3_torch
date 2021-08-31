@@ -1,0 +1,8 @@
+numpy==1.17.3
+opencv-python==3.4.2.16
+torch==1.6.0
+torchvision==0.2.2
+argparse
+tensorboardX
+pickleshare==0.7.5
+matplotlib
